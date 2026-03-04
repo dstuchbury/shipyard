@@ -67,20 +67,67 @@ dev down
 
 # Installation
 
-Clone the repository and run the install script.
+Shipyard can be installed in two ways.
+
+---
+
+# Quick Install (recommended)
+
+Install Shipyard directly using curl:
 
 ```bash
-git clone <repo-url> 
+curl -fsSL https://raw.githubusercontent.com/dstuchbury/shipyard/main/install.sh | bash
+source ~/.bashrc
+```
+
+Then verify the installation:
+
+```bash
+dev doctor
+```
+
+The installer will:
+
+- Install **yq** if required
+- Clone Shipyard to `~/.shipyard`
+- Install the `dev` command to `~/.local/bin`
+- Add `~/.local/bin` to your PATH if needed
+
+---
+
+# Install From Repository
+
+If you prefer to review the code before installing:
+
+```bash
+git clone https://github.com/dstuchbury/shipyard.git
 cd shipyard
 ./install.sh
 source ~/.bashrc
 ```
 
-The installer will:
+Then verify:
 
-- Install **yq** if it is not already installed
-- Add the Shipyard `bin` folder to your `$PATH`
-- Make the `dev` command available everywhere
+```bash
+dev doctor
+```
+
+---
+
+# Updating Shipyard
+
+To update Shipyard in the future, simply rerun the installer:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/dstuchbury/shipyard/main/install.sh | bash
+```
+
+Or if you installed via git:
+
+```bash
+cd ~/.shipyard
+git pull
+```
 
 ---
 

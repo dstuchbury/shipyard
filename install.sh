@@ -11,10 +11,8 @@ set -euo pipefail
 #   - shipyard repo to ~/.shipyard (if running via curl)
 # ----------------------------
 
-# >>> CHANGE THESE <<<
-REPO_URL_DEFAULT="https://github.com/<your-org>/<your-repo>.git"
+REPO_URL_DEFAULT="https://github.com/dstuchbury/shipyard"
 REPO_BRANCH_DEFAULT="main"
-# >>> CHANGE THESE <<<
 
 REPO_URL="${SHIPYARD_REPO_URL:-$REPO_URL_DEFAULT}"
 REPO_BRANCH="${SHIPYARD_BRANCH:-$REPO_BRANCH_DEFAULT}"
