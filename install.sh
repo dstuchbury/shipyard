@@ -5,13 +5,14 @@ set -euo pipefail
 # Shipyard installer
 # - Works when run from repo: ./install.sh
 # - Works when piped: curl ... | bash
+#
 # Installs:
 #   - yq (if missing) to ~/.local/bin/yq (no sudo)
-#   - dev to ~/.local/bin/dev
+#   - dev to ~/.local/bin/dev (symlink)
 #   - shipyard repo to ~/.shipyard (if running via curl)
 # ----------------------------
 
-REPO_URL_DEFAULT="https://github.com/dstuchbury/shipyard"
+REPO_URL_DEFAULT="https://github.com/dstuchbury/shipyard.git"
 REPO_BRANCH_DEFAULT="main"
 
 REPO_URL="${SHIPYARD_REPO_URL:-$REPO_URL_DEFAULT}"
@@ -23,21 +24,19 @@ LOCAL_BIN="${SHIPYARD_BIN_DIR:-$HOME/.local/bin}"
 DEV_TARGET="$LOCAL_BIN/dev"
 YQ_TARGET="$LOCAL_BIN/yq"
 
-say() { printf "%s\n" "$*"; }
+# IMPORTANT: logs go to stderr so we don't contaminate command substitution outputs
+say() { printf "%s\n" "$*" >&2; }
 die() { say "❌ $*"; exit 1; }
 
 ensure_path_line() {
   local shell_rc="$1"
   local line="export PATH=\"$LOCAL_BIN:\$PATH\""
   grep -Fq "$line" "$shell_rc" 2>/dev/null || {
-    say "" >> "$shell_rc"
-    say "# Shipyard" >> "$shell_rc"
-    say "$line" >> "$shell_rc"
+    printf "\n# Shipyard\n%s\n" "$line" >> "$shell_rc"
   }
 }
 
 detect_shell_rc() {
-  # WSL2 defaults to bash usually, but support zsh too.
   if [[ -n "${ZSH_VERSION:-}" ]]; then
     echo "$HOME/.zshrc"
   else
@@ -56,7 +55,6 @@ install_yq_if_missing() {
   say "Installing yq to $YQ_TARGET ..."
   local tmp
   tmp="$(mktemp)"
-  # amd64 is correct for typical WSL2; if you ever need arm64 we can add auto-detect.
   curl -fsSL "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64" -o "$tmp"
   chmod +x "$tmp"
   mv "$tmp" "$YQ_TARGET"
@@ -65,15 +63,8 @@ install_yq_if_missing() {
 }
 
 clone_or_update_repo_if_needed() {
-  # If this installer is run from inside a cloned repo, we can use that directly.
-  # We detect that by checking for bin/dev relative to this script's directory.
-  # When piped via curl, $0 isn't a file; so we clone into $INSTALL_DIR.
-  local running_from_file=0
+  # If run from inside a cloned repo, use that checkout.
   if [[ -f "${BASH_SOURCE[0]:-}" ]]; then
-    running_from_file=1
-  fi
-
-  if [[ "$running_from_file" -eq 1 ]]; then
     local script_dir
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     if [[ -f "$script_dir/bin/dev" ]]; then
@@ -107,7 +98,6 @@ install_dev_command() {
   mkdir -p "$LOCAL_BIN"
   chmod +x "$repo_path/bin/dev"
 
-  # Symlink dev into ~/.local/bin
   ln -sf "$repo_path/bin/dev" "$DEV_TARGET"
   say "✅ Installed dev command at: $DEV_TARGET"
 }
