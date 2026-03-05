@@ -143,7 +143,7 @@ Example:
 
 ```yaml
 master:
-  path: ~/code/php/phpdev
+  path: ~/phpdev
   composeFileName: docker-compose.yml
 
 projects:

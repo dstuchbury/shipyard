@@ -2,8 +2,12 @@
 set -euo pipefail
 
 # Shipyard (repo name) — command: dev
+# Notes:
+# - Config is loaded from <repo>/config/projects.yml by default
+# - Override config path with: SHIPYARD_CONFIG=/path/to/projects.yml dev ...
+# - attach/logs auto-start the project if it isn't running
 
-# Resolve the *real* script path (follow symlinks)
+# Resolve the *real* script path (follow symlinks), so config works via ~/.local/bin/dev symlink too
 SCRIPT_PATH="${BASH_SOURCE[0]}"
 while [ -L "$SCRIPT_PATH" ]; do
   LINK_TARGET="$(readlink "$SCRIPT_PATH")"
@@ -16,8 +20,6 @@ done
 
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-
-# Allow override, otherwise use repo config
 CONFIG="${SHIPYARD_CONFIG:-$REPO_ROOT/config/projects.yml}"
 
 die() { echo "dev: $*" >&2; exit 1; }
@@ -27,8 +29,8 @@ usage() {
 Shipyard — Local Dev Environment Manager
 
 Usage:
-  dev up [<project>] [--stay]
-  dev down [<project>] [--stay]
+  dev up [<project>]
+  dev down [<project>]
   dev restart <project>
 
   dev attach [app|web] <project>     # auto-starts project if needed
@@ -41,14 +43,6 @@ Notes:
 - "dev up" brings up the master compose.
 - "dev down" brings down master + all mapped projects.
 - attach/logs default to "app" if you omit app|web.
-
-Examples:
-  dev up
-  dev up api-gateway
-  dev attach api-gateway
-  dev attach web api-gateway
-  dev logs api-gateway
-  dev list
 EOF
 }
 
@@ -69,6 +63,7 @@ resolve_path() {
   eval echo "$raw"
 }
 
+# YAML helpers (yq v4)
 yq_get_master() {
   local field="$1"
   yq -r ".master.${field} // \"\"" "$CONFIG"
@@ -163,13 +158,10 @@ fi
 
 ensure_deps
 
-START_DIR="$(pwd)"
-
 case "$ACTION" in
   up)
-    # dev up [project] [--stay]
+    # dev up [project]
     PROJECT="${2:-}"
-    FLAG="${3:-}"
 
     if [[ -z "$PROJECT" ]]; then
       IFS="|" read -r DIR FILE <<<"$(get_compose_for_master)"
@@ -179,18 +171,12 @@ case "$ACTION" in
 
     project_exists "$PROJECT" || die "unknown project '$PROJECT'"
     IFS="|" read -r DIR FILE <<<"$(get_compose_for_project "$PROJECT")"
-    cd "$DIR"
-    docker compose -f "$FILE" up -d
-
-    if [[ "${FLAG:-}" != "--stay" ]]; then
-      cd "$START_DIR" || true
-    fi
+    ( cd "$DIR" && docker compose -f "$FILE" up -d )
     ;;
 
   down)
-    # dev down [project] [--stay]
+    # dev down [project]
     PROJECT="${2:-}"
-    FLAG="${3:-}"
 
     if [[ -z "$PROJECT" ]]; then
       # master down first
@@ -208,12 +194,7 @@ case "$ACTION" in
 
     project_exists "$PROJECT" || die "unknown project '$PROJECT'"
     IFS="|" read -r DIR FILE <<<"$(get_compose_for_project "$PROJECT")"
-    cd "$DIR"
-    docker compose -f "$FILE" down --remove-orphans
-
-    if [[ "${FLAG:-}" != "--stay" ]]; then
-      cd "$START_DIR" || true
-    fi
+    ( cd "$DIR" && docker compose -f "$FILE" down --remove-orphans )
     ;;
 
   restart)
@@ -270,11 +251,12 @@ case "$ACTION" in
     echo ""
     echo "Shipyard — dev doctor"
     echo "---------------------"
-
+    echo "✅ dev script: $SCRIPT_PATH"
+    echo "✅ repo root: $REPO_ROOT"
+    echo "✅ config: $CONFIG"
     echo "✅ docker: $(docker --version 2>/dev/null || echo 'present')"
     echo "✅ docker compose: $(docker compose version 2>/dev/null | head -n1)"
     echo "✅ yq: $(yq --version 2>/dev/null || echo 'present')"
-    echo "✅ config: $CONFIG"
 
     mpath="$(yq_get_master path)"
     mfile="$(yq_get_master composeFileName)"
