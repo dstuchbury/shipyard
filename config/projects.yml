@@ -15,3 +15,9 @@ projects:
     appContainer: sns-fpm
     webContainer: status-notification-service-nginx
 
+  - name: endeavour-production
+    path: ~/code/php/endeavour-production
+    composeFileName: docker-compose-dev-tls.yml
+    appContainer: endeavour-fpm
+    webContainer: endeavour-production-nginx
+
