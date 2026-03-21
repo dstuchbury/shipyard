@@ -1,0 +1,82 @@
+services:
+  __SHIPYARD_SERVICE_PHP__:
+    container_name: __SHIPYARD_CONTAINER_PHP__
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    volumes:
+      - __SHIPYARD_APP_PATH__:/var/www/html
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+      - ./php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+    networks:
+      - shipyard
+
+  __SHIPYARD_SERVICE_NGINX__:
+    container_name: __SHIPYARD_CONTAINER_NGINX__
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    depends_on:
+      - __SHIPYARD_SERVICE_PHP__
+    volumes:
+      - __SHIPYARD_APP_PATH__:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - shipyard
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.__SHIPYARD_PROJECT_SLUG__.rule=Host(`__SHIPYARD_PROJECT_DOMAIN__`)"
+      - "traefik.http.routers.__SHIPYARD_PROJECT_SLUG__.entrypoints=websecure"
+      - "traefik.http.routers.__SHIPYARD_PROJECT_SLUG__.tls=true"
+      - "traefik.http.services.__SHIPYARD_PROJECT_SLUG__.loadbalancer.server.port=80"
+
+  __SHIPYARD_SERVICE_NODE__:
+    image: node:25-alpine
+    container_name: __SHIPYARD_CONTAINER_NODE__
+    working_dir: /var/www/html
+    volumes:
+      - __SHIPYARD_APP_PATH__:/var/www/html
+      - /certs:/certs:ro
+    command: sh -lc "npm ci && npm run dev -- --host 0.0.0.0 --port 5173"
+    ports:
+      - "5173:5173"
+    restart: unless-stopped
+    depends_on:
+      - __SHIPYARD_SERVICE_PHP__
+    environment:
+      - VITE_DEV_HOST=__SHIPYARD_PROJECT_DOMAIN__
+      - VITE_DEV_PORT=5173
+      - VITE_HTTPS_KEY=/certs/__SHIPYARD_PROJECT_DOMAIN__-key.pem
+      - VITE_HTTPS_CERT=/certs/__SHIPYARD_PROJECT_DOMAIN__.pem
+    networks:
+      - shipyard
+
+  __SHIPYARD_SERVICE_QUEUE__:
+    container_name: __SHIPYARD_CONTAINER_QUEUE__
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    command: php artisan queue:work
+    volumes:
+      - __SHIPYARD_APP_PATH__:/var/www/html
+    depends_on:
+      - __SHIPYARD_SERVICE_PHP__
+    networks:
+      - shipyard
+
+  __SHIPYARD_SERVICE_SCHEDULER__:
+    container_name: __SHIPYARD_CONTAINER_SCHEDULER__
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    command: sh -c "while true; do php artisan schedule:run; sleep 60; done"
+    volumes:
+      - __SHIPYARD_APP_PATH__:/var/www/html
+    depends_on:
+      - __SHIPYARD_SERVICE_PHP__
+    networks:
+      - shipyard
+
+networks:
+  shipyard:
+    external: true

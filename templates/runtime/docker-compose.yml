@@ -1,0 +1,87 @@
+name: shipyard
+
+services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    restart: unless-stopped
+    networks:
+      - shipyard
+    ports:
+      - "80:80"       # HTTP
+      - "443:443"     # HTTPS
+      - "8082:8080"   # Traefik dashboard
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ~/shipyard/traefik/traefik.yml:/etc/traefik/traefik.yml
+      - ~/shipyard/traefik/dynamic:/etc/traefik/dynamic:ro
+      - ~/shipyard/certs:/certs:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.test`)"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls=true"
+
+  mysql:
+    image: mysql:8.4
+    container_name: mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: phpdev
+      MYSQL_USER: phpdev
+      MYSQL_PASSWORD: phpdev
+    ports:
+      - "3306:3306"
+    volumes:
+      - shipyard_mysql_data:/var/lib/mysql
+    networks:
+      - shipyard
+    command:
+      - --innodb-buffer-pool-size=12G
+      - --innodb-log-file-size=2G
+      - --innodb-log-buffer-size=512M
+      - --max_allowed_packet=1G
+      - --innodb-flush-log-at-trx-commit=2
+      - --innodb-redo-log-capacity=8G
+      - --innodb_flush_method=O_DIRECT
+      - --innodb_flush_log_at_trx_commit=2
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - shipyard
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    restart: unless-stopped
+    environment:
+      MP_DATABASE: /var/mailpit/mailpit.db
+    volumes:
+      - mailpit_data:/var/mailpit
+    networks:
+      - shipyard
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.mailpit.loadbalancer.server.port=8025
+      - traefik.http.routers.mailpit.rule=Host(`mailpit.test`)
+      - traefik.http.routers.mailpit.entrypoints=websecure
+      - traefik.http.routers.mailpit.tls=true
+
+volumes:
+  shipyard_mysql_data:
+    external: true
+  redis_data:
+  mailpit_data:
+
+networks:
+  shipyard:
+    name: shipyard

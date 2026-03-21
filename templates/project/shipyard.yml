@@ -1,0 +1,32 @@
+name: __SHIPYARD_PROJECT_SLUG__
+slug: __SHIPYARD_PROJECT_SLUG__
+app_path: __SHIPYARD_APP_PATH__
+domain: __SHIPYARD_PROJECT_DOMAIN__
+
+dockerfiles:
+  mode: shipyard
+  php: docker/php/Dockerfile
+  nginx: docker/nginx/Dockerfile
+  node: docker/node/Dockerfile
+
+services:
+  php: __SHIPYARD_SERVICE_PHP__
+  nginx: __SHIPYARD_SERVICE_NGINX__
+  node: __SHIPYARD_SERVICE_NODE__
+  queue: __SHIPYARD_SERVICE_QUEUE__
+  scheduler: __SHIPYARD_SERVICE_SCHEDULER__
+
+containers:
+  php: __SHIPYARD_CONTAINER_PHP__
+  nginx: __SHIPYARD_CONTAINER_NGINX__
+  node: __SHIPYARD_CONTAINER_NODE__
+  queue: __SHIPYARD_CONTAINER_QUEUE__
+  scheduler: __SHIPYARD_CONTAINER_SCHEDULER__
+
+defaults:
+  attach_service: php
+
+vite:
+  config_detected: __SHIPYARD_VITE_CONFIG_DETECTED__
+  file: __SHIPYARD_VITE_CONFIG_PATH__
+  requires_manual_update: true
