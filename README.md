@@ -41,10 +41,10 @@ shipyard down
 
 ## Roadmap & Ideas
 
+* [ ] .env file change requirements - i.e. database host and credentials.
 * [ ] Command to tail and follow laravel.log (also support laravel-yyyy-mm-dd.log for today)
 * [ ] Healthcheck
 * [ ] Support for generating multiple queue workers - define in config, then regenerate?
-* [ ] Laravel Telescope
 * [ ] beanstalkd and Beanstalk Console for queue management.
 * [ ] Write a great README to sell the idea
 
