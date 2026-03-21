@@ -6,7 +6,7 @@ from pathlib import Path
 
 import yaml
 
-from shipyard.paths import RUNTIME_PROJECTS_DIR
+from shipyard.paths import RUNTIME_PROJECTS_DIR, RUNTIME_CERTS_DIR
 
 
 def slugify_project_name(name: str) -> str:
@@ -100,6 +100,7 @@ def build_project_replacements(app_path: Path) -> dict[str, str]:
         "__SHIPYARD_PHP_UPSTREAM__": f"{container_php}:9000",
         "__SHIPYARD_VITE_CONFIG_PATH__": str(vite_config) if vite_config else "",
         "__SHIPYARD_VITE_CONFIG_DETECTED__": "true" if vite_config else "false",
+        "__SHIPYARD_RUNTIME_CERTS_PATH__": str(RUNTIME_CERTS_DIR),
     }
 
 

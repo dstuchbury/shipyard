@@ -1,31 +1,368 @@
 # ⚓ Shipyard
 
-![version](https://img.shields.io/badge/version-2.0-blue)
-![platform](https://img.shields.io/badge/platform-Linux%20%7C%20WSL2-blue)
-![docker](https://img.shields.io/badge/docker-required-2496ED?logo=docker)
-![bash](https://img.shields.io/badge/shell-bash-4EAA25?logo=gnubash)
-![status](https://img.shields.io/badge/status-internal%20tool-purple)
+**Shipyard** is a production-shaped local development runtime for Laravel projects.
 
-Change the above!
+It provides a shared Docker-based environment that mirrors modern infrastructure while remaining simple to operate from the command line.
 
-**Shipyard** is a lightweight CLI for managing local Docker development stacks.
+Shipyard manages:
 
-It provides a single command — `dev` — to start projects, attach to containers, view logs, and manage your development environment.
+- A shared local runtime (Traefik, MySQL, Redis, Mailpit)
+- Per-project service orchestration
+- Automatic TLS for `.test` domains
+- Container lifecycle
+- Shell access into running services
+
+The result is a local environment that feels much closer to **real production architecture** than typical single-project stacks.
 
 ---
 
-## Quick Example
+## Quick Examples
+
+Adopt an existing Laravel project:
+
+```bash
+shipyard adopt ~/code/my-laravel-project
+```
+
+Start the shared runtime:
 
 ```bash
 shipyard up
-shipyard up your-project
+```
 
-shipyard attach your-project
-shipyard logs web your-project
+Start a specific project:
 
+```bash
+shipyard up my-laravel-project
+```
+
+Attach to the application container:
+
+```bash
+shipyard attach my-laravel-project
+```
+
+Check runtime status:
+
+```bash
+shipyard list
+```
+
+Stop everything:
+
+```bash
+shipyard down
+```
+
+---
+
+## Why Shipyard?
+
+Many Laravel development setups fall into one of two categories.
+
+### Per-project Docker environments
+
+Tools like Sail or custom Compose setups run a **full stack per project**, which often leads to:
+
+- multiple MySQL instances
+- duplicated infrastructure
+- port conflicts
+- inconsistent environments
+
+### Host-based tooling
+
+Solutions like Valet or Herd run services directly on the host, which is convenient but diverges from production infrastructure.
+
+---
+
+## Shipyard's approach
+
+Shipyard separates **shared infrastructure** from **application services**.
+
+A single shared runtime provides:
+
+```
+Traefik
+MySQL
+Redis
+Mailpit
+```
+
+Each Laravel project runs only its own services:
+
+```
+PHP
+Nginx
+Node
+Queue workers
+Scheduler
+```
+
+Everything runs in Docker and is routed through Traefik with automatic TLS.
+
+This creates a predictable, scalable development environment without unnecessary duplication.
+
+---
+
+## Features
+
+### Shared runtime environment
+
+Shipyard runs a single shared infrastructure stack.
+
+Services include:
+
+- Traefik reverse proxy
+- MySQL 8
+- Redis
+- Mailpit
+
+All projects connect to this environment automatically.
+
+---
+
+### Automatic `.test` domains with TLS
+
+Each project is assigned a domain such as:
+
+```
+https://evolutioncrm.test
+https://endeavour-production.test
+```
+
+Certificates are generated using **mkcert** and managed by Shipyard.
+
+---
+
+### Project adoption
+
+Existing Laravel repositories can be adopted into Shipyard:
+
+```bash
+shipyard adopt /path/to/project
+```
+
+Shipyard generates the runtime configuration required to run the application.
+
+---
+
+### Docker-based architecture
+
+All services run inside containers.
+
+Benefits include:
+
+- consistent environments
+- predictable networking
+- isolation between projects
+- easy cleanup
+
+---
+
+### Simple CLI workflow
+
+Shipyard keeps the command surface small and focused.
+
+Core commands:
+
+```
+shipyard init
+shipyard adopt <path>
+shipyard up
+shipyard up <project>
+shipyard attach <project>
 shipyard list
 shipyard down
 ```
+
+---
+
+## Installation
+
+Shipyard is installed as a global CLI using **pipx**.
+
+### Install pipx
+
+```bash
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+```
+
+Restart your shell afterwards.
+
+---
+
+### Install Shipyard
+
+From the repository:
+
+```bash
+pipx install -e .
+```
+
+This installs the `shipyard` command globally without requiring a virtual environment.
+
+---
+
+## Initialising the runtime
+
+Before adopting projects, initialise the Shipyard runtime:
+
+```bash
+shipyard init
+```
+
+This will:
+
+- create the Shipyard runtime directory
+- install Traefik configuration
+- configure certificates
+- prepare shared services
+
+---
+
+## Running projects
+
+Start the shared runtime:
+
+```bash
+shipyard up
+```
+
+Start a project:
+
+```bash
+shipyard up <project>
+```
+
+Shipyard automatically ensures the core runtime is running.
+
+---
+
+## Accessing containers
+
+Attach to the application container:
+
+```bash
+shipyard attach <project>
+```
+
+Attach to a specific service:
+
+```bash
+shipyard attach <project> nginx
+shipyard attach <project> node
+shipyard attach <project> queue
+```
+
+---
+
+## Runtime status
+
+Check the status of the environment:
+
+```bash
+shipyard list
+```
+
+Example output:
+
+```
+core: up
+projects:
+  - endeavour-production: up
+  - evolutioncrm: down
+```
+
+---
+
+## Architecture
+
+Shipyard separates infrastructure from project services.
+
+### Core runtime
+
+Located at:
+
+```
+~/shipyard
+```
+
+Contains:
+
+```
+docker-compose.yml
+traefik/
+certs/
+projects/
+```
+
+Services:
+
+```
+Traefik
+MySQL
+Redis
+Mailpit
+```
+
+---
+
+### Project runtime
+
+Each adopted project gets its own runtime directory:
+
+```
+~/shipyard/projects/<project>
+```
+
+Containing:
+
+```
+docker-compose.generated.yml
+shipyard.yml
+docker/
+nginx/
+support/
+```
+
+---
+
+## Custom Dockerfiles
+
+Shipyard supports both:
+
+- Shipyard-managed Dockerfiles
+- custom Dockerfiles from the project repository
+
+Configuration is stored in:
+
+```
+shipyard.yml
+```
+
+Example:
+
+```yaml
+dockerfiles:
+  mode: custom
+  php: /path/to/project/.docker/php/Dockerfile-dev
+  nginx: /path/to/project/.docker/nginx/Dockerfile-dev
+  node: /path/to/project/.docker/node/Dockerfile-dev
+```
+
+---
+
+## Goals
+
+Shipyard aims to provide:
+
+- a **production-shaped development environment**
+- **minimal developer friction**
+- **repeatable project setups**
+- a **simple CLI interface**
+
+It is designed specifically for **Laravel development workflows**.
 
 ---
 
@@ -34,8 +371,6 @@ shipyard down
 * [ ] Allow custom Dockerfiles
 * [ ] Make docker-compose.generated.yml use dynamic build context and Dockerfiles
 * [ ] Regenerate published files after a config change to use custom Dockerfiles 
-
----
 
 ---
 

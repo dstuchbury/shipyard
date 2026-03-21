@@ -159,7 +159,7 @@ def restart_project(slug: str) -> None:
       compose_file = get_project_compose_file(slug)
 
       _run(
-          ["docker", "compose", "-f", compose_file.name, "restart"],
+          ["docker", "compose", "-f", compose_file.name, "up" , "-d", "--force-recreate"],
           cwd=project_dir,
       )
 

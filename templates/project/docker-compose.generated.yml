@@ -36,7 +36,7 @@ services:
     working_dir: /var/www/html
     volumes:
       - __SHIPYARD_APP_PATH__:/var/www/html
-      - /certs:/certs:ro
+      - __SHIPYARD_RUNTIME_CERTS_PATH__:/certs:ro
     command: sh -lc "npm ci && npm run dev -- --host 0.0.0.0 --port 5173"
     ports:
       - "5173:5173"
