@@ -67,7 +67,7 @@ def detect_vite_config(path: Path) -> Path | None:
 def build_project_replacements(app_path: Path) -> dict[str, str]:
     app_path = app_path.resolve()
     slug = slugify_project_name(app_path.name)
-    domain = f"{slug}.test"
+    domain = f"{slug}.localhost"
 
     service_php = f"{slug}-php"
     service_nginx = f"{slug}-nginx"

@@ -1,6 +1,6 @@
 tls:
   certificates:
-    - certFile: /certs/traefik.test.pem
-      keyFile: /certs/traefik.test-key.pem
-    - certFile: /certs/mailpit.test.pem
-      keyFile: /certs/mailpit.test-key.pem
+    - certFile: /certs/traefik.localhost.pem
+      keyFile: /certs/traefik.localhost-key.pem
+    - certFile: /certs/mailpit.localhost.pem
+      keyFile: /certs/mailpit.localhost-key.pem

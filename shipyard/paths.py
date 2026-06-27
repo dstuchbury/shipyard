@@ -32,8 +32,8 @@ TEMPLATE_PROJECT_SHIPYARD_FILE = TEMPLATE_PROJECT_DIR / "shipyard.yml"
 TEMPLATE_PROJECT_COMPOSE_FILE = TEMPLATE_PROJECT_DIR / "docker-compose.generated.yml"
 
 CORE_CERT_FILES = {
-    "traefik_cert": "traefik.test.pem",
-    "traefik_key": "traefik.test-key.pem",
-    "mailpit_cert": "mailpit.test.pem",
-    "mailpit_key": "mailpit.test-key.pem",
+    "traefik_cert": "traefik.localhost.pem",
+    "traefik_key": "traefik.localhost-key.pem",
+    "mailpit_cert": "mailpit.localhost.pem",
+    "mailpit_key": "mailpit.localhost-key.pem",
 }

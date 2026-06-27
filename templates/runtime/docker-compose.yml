@@ -20,7 +20,7 @@ services:
       - ~/shipyard/certs:/certs:ro
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.test`)"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
       - "traefik.http.routers.traefik.service=api@internal"
       - "traefik.http.routers.traefik.entrypoints=websecure"
       - "traefik.http.routers.traefik.tls=true"
@@ -72,7 +72,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.services.mailpit.loadbalancer.server.port=8025
-      - traefik.http.routers.mailpit.rule=Host(`mailpit.test`)
+      - traefik.http.routers.mailpit.rule=Host(`mailpit.localhost`)
       - traefik.http.routers.mailpit.entrypoints=websecure
       - traefik.http.routers.mailpit.tls=true
 

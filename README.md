@@ -8,7 +8,7 @@ Shipyard manages:
 
 - A shared local runtime (Traefik, MySQL, Redis, Mailpit)
 - Per-project service orchestration
-- Automatic TLS for `.test` domains
+- Automatic TLS for `..localhost` domains
 - Container lifecycle
 - Shell access into running services
 
@@ -121,13 +121,13 @@ All projects connect to this environment automatically.
 
 ---
 
-### Automatic `.test` domains with TLS
+### Automatic `..localhost` domains with TLS
 
 Each project is assigned a domain such as:
 
 ```
-https://evolutioncrm.test
-https://endeavour-production.test
+https://evolutioncrm..localhost
+https://endeavour-production..localhost
 ```
 
 Certificates are generated using **mkcert** and managed by Shipyard.
